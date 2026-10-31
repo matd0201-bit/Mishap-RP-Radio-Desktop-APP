@@ -1,0 +1,55 @@
+{
+  "name": "mishap-rp-radio-portable",
+  "version": "2.3.2",
+  "description": "MISHAP RP RADIO - application portable Windows",
+  "main": "main.js",
+  "author": "MISHAP RP",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "uiohook-napi": "1.5.4"
+  },
+  "devDependencies": {
+    "electron": "33.4.11",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "com.mishaprp.radio",
+    "productName": "MISHAP RP RADIO",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/uiohook-napi/**"
+    ],
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "assets/MishapRP.ico",
+      "assets/MishapRP.png",
+      "node_modules/**"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/MishapRP.ico",
+      "artifactName": "MISHAP-RP-RADIO-${version}-Portable.${ext}"
+    },
+    "portable": {
+      "artifactName": "MISHAP-RP-RADIO-${version}-Portable.${ext}"
+    }
+  }
+}
