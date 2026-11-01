@@ -65,12 +65,16 @@ function sendPtt(state) {
   mainWindow.webContents.send('mishap-global-ptt', state);
 }
 function onKeyDown(event) {
-  if (pttCapturing || !configMatches(event, pttConfig.key)) return;
+  // Au premier plan, le renderer traite lui-même le clavier pour garder le PTT réactif.
+  // Le hook global ne prend le relais que lorsque la fenêtre n'a plus le focus.
+  if (pttCapturing || (mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused()) || !configMatches(event, pttConfig.key)) return;
   if (pttIsDown) return;
   pttIsDown = true;
   sendPtt('down');
 }
 function onKeyUp(event) {
+  // Ne pas filtrer selon le focus ici : si l'app reprend le focus pendant un appui
+  // commencé en arrière-plan, il faut tout de même envoyer la relâche.
   if (!pttConfig.key || CODE_MAP[pttConfig.key.code] === undefined) return;
   if (event.keycode !== CODE_MAP[pttConfig.key.code] || !pttIsDown) return;
   pttIsDown = false;
