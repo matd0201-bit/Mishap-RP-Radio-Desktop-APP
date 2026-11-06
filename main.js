@@ -67,7 +67,7 @@ function sendPtt(state) {
 function onKeyDown(event) {
   // Au premier plan, le renderer traite lui-même le clavier pour garder le PTT réactif.
   // Le hook global ne prend le relais que lorsque la fenêtre n'a plus le focus.
-  if (pttCapturing || !configMatches(event, pttConfig.key)) return;
+  if (pttCapturing || (mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused()) || !configMatches(event, pttConfig.key)) return;
   if (pttIsDown) return;
   pttIsDown = true;
   // En mode bascule, chaque nouvel appui physique inverse l'état d'émission.

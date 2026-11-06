@@ -484,7 +484,7 @@ document.addEventListener("keydown",function(e){
     bind({code:e.code,label:lbl(e),ctrl:e.ctrlKey,shift:e.shiftKey,alt:e.altKey,meta:e.metaKey});return}
   var t=document.activeElement,tg=t&&t.tagName;
   if(e.isTrusted&&(tg==="TEXTAREA"||tg==="SELECT"||(tg==="INPUT"&&t.type!=="range")))return;
-  var a=actOf(e);if(!a)return;if(a==="ptt"&&window.mishapPTT)return;e.preventDefault();if(e.repeat)return;
+  var a=actOf(e);if(!a)return;e.preventDefault();if(e.repeat)return;
   if(tg==="BUTTON")t.blur();run(a,true)},true);
 document.addEventListener("keyup",function(e){
   if(cap){if(pm&&pm===e.code){e.preventDefault();bind({code:e.code,label:lbl(e)})}return}
