@@ -70,15 +70,15 @@ function onKeyDown(event) {
   if (pttCapturing || !configMatches(event, pttConfig.key)) return;
   if (pttIsDown) return;
   pttIsDown = true;
-  sendPtt('down');
+  // En mode bascule, chaque nouvel appui physique inverse l'état d'émission.
+  sendPtt(pttConfig.mode === 'toggle' ? 'toggle' : 'down');
 }
 function onKeyUp(event) {
-  // Ne pas filtrer selon le focus ici : si l'app reprend le focus pendant un appui
-  // commencé en arrière-plan, il faut tout de même envoyer la relâche.
+  // Le relâchement physique ne coupe pas l'émission en mode bascule.
   if (!pttConfig.key || CODE_MAP[pttConfig.key.code] === undefined) return;
   if (event.keycode !== CODE_MAP[pttConfig.key.code] || !pttIsDown) return;
   pttIsDown = false;
-  sendPtt('up');
+  if (pttConfig.mode !== 'toggle') sendPtt('up');
 }
 function startKeyboardHook() {
   try {
@@ -118,7 +118,10 @@ function createWindow() {
   });
   mainWindow.loadFile(path.join(__dirname, 'index.html'));
   mainWindow.on('blur', () => {
-    if (pttIsDown) { pttIsDown = false; sendPtt('up'); }
+    if (pttConfig.mode !== 'toggle' && pttIsDown) {
+      pttIsDown = false;
+      sendPtt('up');
+    }
   });
   mainWindow.on('closed', () => { mainWindow = null; });
 }

@@ -494,7 +494,8 @@ var extensionPttActive=false;
 window.__MISHAP_PTT_EXTENSION_BRIDGE__=true;
 window.addEventListener("mishap-radio-extension-ptt",function(e){
   var state=e&&e.detail;
-  if(state==="down"){extensionPttActive=true;pttDown()}
+  if(state==="toggle"){extensionPttActive=false;pttPress()}
+  else if(state==="down"){extensionPttActive=true;pttDown()}
   else if(state==="up"){extensionPttActive=false;pttUp()}
 });
 window.addEventListener("blur",function(){if(cfg.pttMode!=="toggle"&&!extensionPttActive)pttUp()});
