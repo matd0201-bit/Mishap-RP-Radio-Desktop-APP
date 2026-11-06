@@ -1,7 +1,7 @@
 {
   "name": "mishap-rp-radio-portable",
-  "version": "2.3.2",
-  "description": "MISHAP RP RADIO - application portable Windows",
+  "version": "3.1.1",
+  "description": "MISHAP RP RADIO V3.1.1 - application portable Windows",
   "main": "main.js",
   "author": "MISHAP RP",
   "license": "UNLICENSED",

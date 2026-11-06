@@ -1,25 +1,34 @@
-# MISHAP RP RADIO — version portable
+# MISHAP RP RADIO V3.1.1 — Portable Windows
 
-## Fonctionnalités
-- Un seul exécutable Windows `.exe` portable, sans assistant d'installation.
-- Icône de l'application issue de `MishapRP.png`.
-- PTT global utilisable lorsque l'application est réduite ou qu'une autre fenêtre est active.
-- Le raccourci est celui défini dans les paramètres de la radio.
-- Le mode bascule (un appui pour parler, un nouvel appui pour couper) est activé par défaut. Le mode maintien reste disponible dans les paramètres.
+Projet Electron pour générer une application Windows portable en un seul fichier `.exe` (sans installateur).
 
-## Générer le fichier EXE avec GitHub
-1. Dépose le contenu de ce dossier à la racine de ton dépôt GitHub.
-2. Ouvre l'onglet **Actions**.
-3. Lance **Build MISHAP RP RADIO portable EXE** avec **Run workflow**.
-4. Télécharge l'artefact **MISHAP-RP-RADIO-Portable** : il contient le fichier `.exe`.
+## Générer le `.exe` avec GitHub Actions
 
-## Compilation locale (Windows)
-Avec Node.js 20 installé, lance dans ce dossier :
-```bash
-npm install
-npm run build:win
-```
-Le fichier final sera dans `release/`.
+1. Décompresser le dossier `MISHAP-RP-RADIO-PORTABLE`.
+2. Copier **le contenu** de ce dossier à la racine du dépôt GitHub.
+3. Envoyer les fichiers sur la branche `main`.
+4. Ouvrir l'onglet **Actions**.
+5. Lancer **Build MISHAP RP RADIO portable EXE** (ou attendre le déclenchement automatique après un push).
+6. Télécharger l'artefact `MISHAP-RP-RADIO-Portable` à la fin du workflow. Il contient le fichier `.exe` portable.
+
+## PTT
+
+- Au premier plan : le clavier est traité par la page radio.
+- En arrière-plan : le raccourci est capturé globalement par Windows via `uiohook-napi`.
+- Le mode « appui pour parler / nouvel appui pour couper » est sélectionné par défaut. Le mode maintien reste disponible dans les paramètres.
+- La touche et le mode sélectionnés sont synchronisés avec le processus Electron.
+
+## Mise à jour V3.1.1
+
+- Ajout des statuts Traffic Stop et Retour Station, et correction de « En Route ».
+- Harmonisation des couleurs de statut : vert (Disponible), rouge (Indisponible), orange (Occupé), bleu (autres statuts). Les boutons de sélection restent neutres.
+- Les modifications du profil ne sont appliquées qu’après clic sur « Sauvegarder ».
+- Ajout d’un filtre de date au journal des transmissions ; seules les dates contenant des messages sont proposées.
+- Les transmissions restent conservées localement dans IndexedDB sur chaque appareil. Il n’y a pas de sauvegarde centrale partagée.
 
 ## À savoir
-Le `.exe` portable ne lance pas d'assistant d'installation et peut être déplacé comme un fichier normal. Les préférences et données locales restent dans le profil Windows de l'utilisateur. La radio utilise PeerJS/WebRTC et nécessite une connexion Internet pour communiquer.
+
+- Aucun installateur n'est créé : la cible est `portable`.
+- Les réglages locaux sont conservés dans le profil utilisateur Windows.
+- La radio a toujours besoin d'une connexion Internet pour ses fonctions réseau (PeerJS/WebRTC).
+- Le PTT global dépend des permissions et du bon démarrage du module clavier natif Windows.
