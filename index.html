@@ -311,7 +311,8 @@ var SND={push:"UklGRvBLAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YcxLAAABAAEAA
 var ACT=[["ptt","Parler (PTT)"],["s100","Signal 100 (dispatch)"],["s100end","Fin du Signal 100 (dispatch)"],["priorityTone","Priority Tone (dispatch)"],["airUnit","Air Unit (dispatch)"],["swat","Équipe tactique (dispatch)"],["panic","Panic button"],["prev","Canal précédent"],["next","Canal suivant"],["pwr","Radio On/Off"]];
 var cfg={sfx:1,voice:1,alert:1,bg:"#0a0c0f",panel:"#11141a",inId:"",outId:"",prof:null,dprof:null,pttMode:"hold",keys:{ptt:{code:"Space",label:"Espace"}}};
 try{var j=JSON.parse(localStorage.getItem("mishapRadio")||"null");if(j){cfg.sfx=Math.max(.01,Math.min(1,Number(j.sfx)||1));cfg.voice=Math.max(.01,Math.min(1,Number(j.voice)||1));cfg.alert=(j.alert===undefined||isNaN(Number(j.alert)))?1:Math.max(0,Math.min(1,Number(j.alert)));cfg.bg=/^#[0-9a-f]{6}$/i.test(j.bg||"")?j.bg:"#0a0c0f";cfg.panel=/^#[0-9a-f]{6}$/i.test(j.panel||"")?j.panel:"#11141a";cfg.keys=j.keys||{};delete cfg.keys.call;cfg.inId=j.inId||"";cfg.outId=j.outId||"";cfg.prof=j.prof||null;cfg.dprof=j.dprof||null;cfg.pttMode=j.pttMode==="toggle"?"toggle":"hold"}}catch(e){}
-function save(){try{localStorage.setItem("mishapRadio",JSON.stringify(cfg))}catch(e){}}
+function syncDesktopPtt(){try{if(window.mishapPTT){window.mishapPTT.setConfig({key:cfg.keys&&cfg.keys.ptt?cfg.keys.ptt:null,mode:cfg.pttMode==="toggle"?"toggle":"hold"});window.mishapPTT.setCapturing(!!cap)}}catch(e){}}
+function save(){try{localStorage.setItem("mishapRadio",JSON.stringify(cfg))}catch(e){}syncDesktopPtt()}
 // Statuts (Dispatch + Unité)
 var STT={dispo:{l:"Disponible"},occupe:{l:"Occupé"},indispo:{l:"Indisponible"},enroute:{l:"En Route"},onscene:{l:"On Scene"},invest:{l:"Investigation"},repas:{l:"Pause Repas"},pursuit:{l:"In Pursuit"},trafficstop:{l:"Traffic Stop"},retourstation:{l:"Retour Station"}};
 function sttOk(k){return Object.prototype.hasOwnProperty.call(STT,String(k))?String(k):"dispo"}
@@ -465,7 +466,7 @@ function lbl(e){var c=e.code;if(c==="Space")return"Espace";if(c.indexOf("Numpad"
 function fl(k){return (k.ctrl?"Ctrl + ":"")+(k.shift?"Maj + ":"")+(k.alt?"Alt + ":"")+(k.meta?"Win + ":"")+k.label}
 function actOf(e){return Object.keys(cfg.keys).filter(function(a){var k=cfg.keys[a];return k&&k.code===e.code&&(isMod(k.code)||(!!k.ctrl===e.ctrlKey&&!!k.shift===e.shiftKey&&!!k.alt===e.altKey&&!!k.meta===e.metaKey))})[0]}
 function bind(k){Object.keys(cfg.keys).forEach(function(a){var q=cfg.keys[a];if(a!==cap&&q&&q.code===k.code&&!!q.ctrl===!!k.ctrl&&!!q.shift===!!k.shift&&!!q.alt===!!k.alt&&!!q.meta===!!k.meta)delete cfg.keys[a]});
-  cfg.keys[cap]=k;save();cap=null;pm=null;sndClick();renderKeys()}
+  cfg.keys[cap]=k;cap=null;pm=null;save();sndClick();renderKeys()}
 function run(a,down){
   if(a==="ptt"){down?pttPress():pttRelease();return}
   if(!down)return;
@@ -477,13 +478,13 @@ function run(a,down){
   else if(a==="pwr")$("pwr").click();else if(a==="panic")$("panic").click();else if(a==="prev")setCh(st.ch-1);else if(a==="next")setCh(st.ch+1)}
 document.addEventListener("keydown",function(e){
   if(cap){e.preventDefault();e.stopPropagation();
-    if(e.code==="Escape"){cap=null;pm=null;renderKeys();return}
-    if(e.code==="Backspace"||e.code==="Delete"){delete cfg.keys[cap];save();cap=null;pm=null;sndClick();renderKeys();return}
+    if(e.code==="Escape"){cap=null;pm=null;syncDesktopPtt();renderKeys();return}
+    if(e.code==="Backspace"||e.code==="Delete"){delete cfg.keys[cap];cap=null;pm=null;save();sndClick();renderKeys();return}
     if(isMod(e.code)){pm=e.code;return}
     bind({code:e.code,label:lbl(e),ctrl:e.ctrlKey,shift:e.shiftKey,alt:e.altKey,meta:e.metaKey});return}
   var t=document.activeElement,tg=t&&t.tagName;
   if(e.isTrusted&&(tg==="TEXTAREA"||tg==="SELECT"||(tg==="INPUT"&&t.type!=="range")))return;
-  var a=actOf(e);if(!a)return;e.preventDefault();if(e.repeat)return;
+  var a=actOf(e);if(!a)return;if(a==="ptt"&&window.mishapPTT)return;e.preventDefault();if(e.repeat)return;
   if(tg==="BUTTON")t.blur();run(a,true)},true);
 document.addEventListener("keyup",function(e){
   if(cap){if(pm&&pm===e.code){e.preventDefault();bind({code:e.code,label:lbl(e)})}return}
@@ -501,7 +502,7 @@ window.addEventListener("blur",function(){if(cfg.pttMode!=="toggle"&&!extensionP
 // Paramètres
 function renderKeys(){var L=$("keyList");L.innerHTML="";ACT.forEach(function(x){var r=document.createElement("div"),n=document.createElement("span"),b=document.createElement("button"),c=document.createElement("button");
   r.className="krow";n.textContent=x[1];b.className="btn kb"+(cap===x[0]?" wait":"");b.textContent=cap===x[0]?"Appuyez sur une touche…":(cfg.keys[x[0]]?fl(cfg.keys[x[0]]):"Non assignée");
-  b.onclick=function(){cap=x[0];renderKeys()};c.className="btn small";c.textContent="Effacer";c.setAttribute("aria-label","Supprimer la touche");c.onclick=function(){delete cfg.keys[x[0]];cap=null;save();renderKeys()};
+  b.onclick=function(){cap=x[0];syncDesktopPtt();renderKeys()};c.className="btn small";c.textContent="Effacer";c.setAttribute("aria-label","Supprimer la touche");c.onclick=function(){delete cfg.keys[x[0]];cap=null;save();renderKeys()};
   r.appendChild(n);r.appendChild(b);r.appendChild(c);L.appendChild(r)})}
 function syncVol(){$("vSfx").value=Math.round(cfg.sfx*100);$("vVoice").value=Math.round(cfg.voice*100);$("oSfx").textContent=Math.round(cfg.sfx*100)+" %";$("oVoice").textContent=Math.round(cfg.voice*100)+" %";$("vAlert").value=Math.round(cfg.alert*100);$("oAlert").textContent=Math.round(cfg.alert*100)+" %"}
 $("vSfx").oninput=function(){cfg.sfx=this.value/100;save();syncVol();syncHeli()};$("vSfx").onchange=function(){sndClose()};
@@ -512,7 +513,7 @@ function applyBg(){document.documentElement.style.setProperty("--bg",cfg.bg);var
 function syncBg(){$("bgColor").value=cfg.bg;Array.prototype.forEach.call($("bgSwatches").children,function(b){b.setAttribute("aria-pressed",b.dataset.c.toLowerCase()===cfg.bg.toLowerCase())})}
 function buildBg(){var C=$("bgSwatches");C.innerHTML="";BGS.forEach(function(x){var b=document.createElement("button");b.type="button";b.className="swatch";b.dataset.c=x[0];b.style.background=x[0];b.title=x[1];b.setAttribute("aria-label",x[1]);b.onclick=function(){cfg.bg=x[0];save();applyBg();syncBg();sndClick()};C.appendChild(b)})}
 $("bgColor").oninput=function(){cfg.bg=this.value;save();applyBg();syncBg()};
-buildBg();applyBg();syncBg();
+buildBg();applyBg();syncBg();syncDesktopPtt();
 var PANEL_DEF="#11141a",PNS=[["#11141a","Gris (défaut)"],["#101a2c","Bleu marine"],["#0f1b15","Vert sombre"],["#1f1217","Bordeaux"],["#19132a","Violet"],["#252a32","Gris clair"]];
 function mixHex(h,t,a){var r=[1,3,5].map(function(i){var c=parseInt(h.substr(i,2),16),d=t==="w"?255:0;return Math.round(c+(d-c)*a)});return "#"+r.map(function(v){return ("0"+v.toString(16)).slice(-2)}).join("")}
 function applyPanel(){var r=document.documentElement.style;if(cfg.panel.toLowerCase()===PANEL_DEF){["--s1","--s2","--in","--line","--line2"].forEach(function(k){r.removeProperty(k)});return}
@@ -521,7 +522,7 @@ function syncPanel(){Array.prototype.forEach.call($("panelSwatches").children,fu
 (function(){var C=$("panelSwatches");PNS.forEach(function(x){var b=document.createElement("button");b.type="button";b.className="swatch";b.dataset.c=x[0];b.style.background=x[0];b.title=x[1];b.setAttribute("aria-label",x[1]);b.onclick=function(){cfg.panel=x[0];save();applyPanel();syncPanel();sndClick()};C.appendChild(b)})})();
 applyPanel();syncPanel();
 function syncPtt(){document.querySelectorAll("#pttModeSeg button").forEach(function(b){b.setAttribute("aria-pressed",b.dataset.m===cfg.pttMode)})}
-function openSet(o){$("settings").classList.toggle("hidden",!o);document.body.classList.toggle("noscroll",o);$("setBtn").setAttribute("aria-expanded",o);cap=null;if(o){renderKeys();syncPtt();$("setClose").focus()}}
+function openSet(o){$("settings").classList.toggle("hidden",!o);document.body.classList.toggle("noscroll",o);$("setBtn").setAttribute("aria-expanded",o);cap=null;syncDesktopPtt();if(o){renderKeys();syncPtt();$("setClose").focus()}}
 $("setBtn").onclick=function(){sndClick();openSet(true)};$("setClose").onclick=function(){openSet(false)};
 $("settings").addEventListener("mousedown",function(e){if(e.target===this)openSet(false)});
 document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!cap&&!$("settings").classList.contains("hidden"))openSet(false)});
